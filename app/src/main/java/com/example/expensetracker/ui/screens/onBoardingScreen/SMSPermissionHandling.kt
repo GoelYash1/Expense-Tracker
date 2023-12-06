@@ -1,4 +1,4 @@
-package com.example.expensetracker.screens.onBoardingScreen
+package com.example.expensetracker.ui.screens.onBoardingScreen
 
 import android.Manifest
 import android.content.Context
@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavHostController
-import com.example.expensetracker.Main
+import com.example.expensetracker.util.Main
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch

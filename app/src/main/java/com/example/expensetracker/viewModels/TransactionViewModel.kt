@@ -29,7 +29,7 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
         getTransactions(month = LocalDate.now().month)
     }
 
-    fun getTransactions(year: Int = Year.now().value, month: Month, dayOfMonth: Int? = null) {
+    fun getTransactions(year: Int = Year.now().value, month: Month?=null, dayOfMonth: Int? = null) {
         Log.d("TransactionViewModel", "Get Transactions")
         val (startDateTime, endDateTime) = getDateTime(year, month, dayOfMonth)
         val from = startDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()

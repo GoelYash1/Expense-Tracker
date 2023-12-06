@@ -1,4 +1,4 @@
-package com.example.expensetracker.screens.mainScreen.transactionScreen
+package com.example.expensetracker.ui.screens.mainScreen.transactionScreen
 
 import android.os.Build
 import android.util.Log
@@ -49,7 +49,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun TransactionScreen(transactionViewModel: TransactionViewModel) {
     val transactionResource by transactionViewModel.transactions.collectAsState()
-    val months = Month.entries.map { it.name }
+    val months = listOf("ALL") + Month.entries.map { it.name }
     var currMonth by remember {
         mutableStateOf(LocalDate.now().month.name)
     }
@@ -82,8 +82,14 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
                     currValue = currMonth
                 ) {
                     currMonth = it
-                    val month = Month.valueOf(currMonth)
-                    transactionViewModel.getTransactions(month = month)
+                    if (currMonth != "ALL")
+                    {
+                        val month = Month.valueOf(currMonth)
+                        transactionViewModel.getTransactions(month = month)
+                    }
+                    else{
+                        transactionViewModel.getTransactions()
+                    }
                 }
             }
         }

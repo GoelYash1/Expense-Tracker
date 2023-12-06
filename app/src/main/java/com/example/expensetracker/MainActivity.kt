@@ -18,15 +18,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.expensetracker.screens.mainScreen.MainScreen
-import com.example.expensetracker.screens.onBoardingScreen.OnBoardingScreen
-import com.example.expensetracker.ui.theme.ExpenseTrackerTheme
+import com.example.expensetracker.ui.screens.mainScreen.MainScreen
+import com.example.expensetracker.ui.screens.onBoardingScreen.OnBoardingScreen
+import com.example.expensetracker.util.Main
+import com.example.expensetracker.util.OnBoarding
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             val onBoardingCompleted = remember {
                 mutableStateOf(

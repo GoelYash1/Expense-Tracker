@@ -1,4 +1,4 @@
-package com.example.expensetracker.screens.mainScreen
+package com.example.expensetracker.ui.screens.mainScreen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -12,10 +12,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.expensetracker.Home
-import com.example.expensetracker.Transactions
-import com.example.expensetracker.screens.mainScreen.homeScreen.HomeScreen
-import com.example.expensetracker.screens.mainScreen.transactionScreen.TransactionScreen
+import com.example.expensetracker.util.Home
+import com.example.expensetracker.util.Transactions
+import com.example.expensetracker.ui.screens.mainScreen.homeScreen.HomeScreen
+import com.example.expensetracker.ui.screens.mainScreen.transactionScreen.TransactionScreen
 import com.example.expensetracker.viewModels.TransactionViewModel
 import org.koin.androidx.compose.getViewModel
 
