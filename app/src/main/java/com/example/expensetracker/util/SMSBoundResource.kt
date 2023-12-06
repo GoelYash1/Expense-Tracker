@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
-inline fun <ResultType> smsBoundResource(
+inline fun <ResultType,RequestType> smsBoundResource(
     crossinline query: () -> Flow<ResultType>,
-    crossinline fetch: suspend () -> ResultType,
-    crossinline saveFetchResult: suspend (ResultType) -> Unit,
+    crossinline fetch: suspend () -> RequestType,
+    crossinline saveFetchResult: suspend (RequestType) -> Unit,
     crossinline isPermissionGranted: () -> Boolean
 ) = flow {
     val data = query().first()
@@ -45,10 +45,10 @@ class SMSBoundResource(private val context: Context) {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun <ResultType> bind(
+    fun <ResultType,RequestType> bind(
         query: () -> Flow<ResultType>,
-        fetch: suspend () -> ResultType,
-        saveFetchResult: suspend (ResultType) -> Unit
+        fetch: suspend () -> RequestType,
+        saveFetchResult: suspend (RequestType) -> Unit
     ) = smsBoundResource(query, fetch, saveFetchResult) { isSmsPermissionGranted() }
 }
 

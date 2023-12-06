@@ -1,6 +1,7 @@
 package com.example.expensetracker.screens.mainScreen
 
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
@@ -23,15 +24,21 @@ fun MainBottomNavigation(navController: NavHostController) {
         mutableIntStateOf(0)
     }
     NavigationBar(
-        containerColor = Color.Transparent
+        containerColor = MaterialTheme.colorScheme.primary
     ) {
         destinationList.forEachIndexed { index, destination ->
             NavigationBarItem(
-                label = { Text(text = destination.title) },
+                label = {
+                    Text(
+                        text = destination.title,
+                        color = Color.White
+                    )
+                },
                 icon = {
                     Icon(
                         painter = painterResource(id = destination.icon),
-                        contentDescription = destination.title
+                        contentDescription = destination.title,
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 },
                 selected = index == selectedIndex.intValue,

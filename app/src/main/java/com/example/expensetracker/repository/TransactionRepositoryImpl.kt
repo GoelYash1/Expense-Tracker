@@ -1,4 +1,4 @@
-package com.example.expensetracker.data.repo
+package com.example.expensetracker.repository
 
 import android.os.Build
 import android.util.Log
@@ -32,7 +32,7 @@ class TransactionRepositoryImpl(
                     val type = if (TransactionSMSFilter().isExpense(it.body)) "Expense" else "Income"
                     val otherPartyName = TransactionSMSFilter().extractAccount(it.body) ?: "N/A"
                     val title = "What For?"
-                    val categoryName = "All"
+                    val categoryName = TransactionCategories.ALL
                     val accountId = ""
                     transactions.add(
                         Transaction(
@@ -50,7 +50,21 @@ class TransactionRepositoryImpl(
                 transactions
             }
         ) {
-            transactionDao.insertTransactions(it)
+                transactionDao.insertAllTransactions(it)
+        }
+    }
+
+    override suspend fun updateTransaction(transaction: Transaction) {
+        transactionDao.updateTransaction(transaction)
+    }
+
+    override fun getCategoryTransactions(category: String): Resource<List<Transaction>> {
+        return try {
+            Resource.Success(transactionDao.getCategoryTransactions(category))
+        } catch (e: Exception) {
+            // Log the exception for debugging
+            Log.e("TransactionRepositoryImpl", "Error getting category transactions", e)
+            Resource.Error(e, emptyList())
         }
     }
 }

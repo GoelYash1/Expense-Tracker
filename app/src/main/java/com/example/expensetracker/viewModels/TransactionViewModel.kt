@@ -6,21 +6,18 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetracker.data.entities.Transaction
-import com.example.expensetracker.data.repo.TransactionRepository
+import com.example.expensetracker.repository.TransactionRepository
 import com.example.expensetracker.util.Resource
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.sql.Time
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
 import java.time.ZoneId
 import java.util.Calendar
+import kotlin.coroutines.cancellation.CancellationException
 
 @RequiresApi(Build.VERSION_CODES.O)
 class TransactionViewModel(private val transactionRepository: TransactionRepository) : ViewModel() {
@@ -28,12 +25,12 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
     val transactions: StateFlow<Resource<List<Transaction>>> = _transactions
 
     init {
-        Log.d("Called INIT", "Called Init")
-        getTransactions(month = Month.NOVEMBER)
+        Log.d("TransactionViewModel", "Called INIT")
+        getTransactions(month = LocalDate.now().month)
     }
 
-    private fun getTransactions(year: Int = Year.now().value, month: Month, dayOfMonth: Int? = null) {
-        Log.d("Get Transactions","In get Transactions")
+    fun getTransactions(year: Int = Year.now().value, month: Month, dayOfMonth: Int? = null) {
+        Log.d("TransactionViewModel", "Get Transactions")
         val (startDateTime, endDateTime) = getDateTime(year, month, dayOfMonth)
         val from = startDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val to = endDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -41,6 +38,7 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
         viewModelScope.launch {
             _transactions.value = Resource.Loading(emptyList())
             try {
+                Log.d("TransactionViewModel","In Try Getting Transactions")
                 transactionRepository.getAllTransactions(from, to).collect { result ->
                     _transactions.value = when (result) {
                         is Resource.Success -> Resource.Success(result.data ?: emptyList())
@@ -48,12 +46,12 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
                         is Resource.Loading -> Resource.Loading(emptyList())
                     }
                 }
+            } catch (e: CancellationException) {
+                Log.d("TransactionViewModel", "Coroutine was cancelled")
             } catch (e: Exception) {
-                // Log the exception for debugging
                 Log.e("TransactionViewModel", "Error fetching transactions", e)
                 _transactions.value = Resource.Error(e, emptyList())
             }
-
         }
     }
 

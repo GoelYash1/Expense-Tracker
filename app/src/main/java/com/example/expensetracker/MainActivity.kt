@@ -1,11 +1,13 @@
 package com.example.expensetracker
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -21,33 +23,42 @@ import com.example.expensetracker.screens.onBoardingScreen.OnBoardingScreen
 import com.example.expensetracker.ui.theme.ExpenseTrackerTheme
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            ExpenseTrackerTheme {
-                val onBoardingCompleted = remember {
-                    mutableStateOf(
-                        getSharedPreferences("MySharedPreferences", Context.MODE_PRIVATE)
-                            .getBoolean("onBoardingCompleted", false)
-                    )
-                }
-                val mainNavController = rememberNavController()
 
-                LaunchedEffect(key1 = onBoardingCompleted.value) {
-                    if (onBoardingCompleted.value) {
-                        mainNavController.navigate(Main.route) {
-                            popUpTo(OnBoarding.route) { inclusive = true }
-                        }
+        setContent {
+            val onBoardingCompleted = remember {
+                mutableStateOf(
+                    getSharedPreferences("MySharedPreferences", Context.MODE_PRIVATE)
+                        .getBoolean("onBoardingCompleted", false)
+                )
+            }
+
+            val mainNavController = rememberNavController()
+
+            LaunchedEffect(key1 = onBoardingCompleted.value) {
+                if (onBoardingCompleted.value) {
+                    mainNavController.navigate(Main.route) {
+                        popUpTo(OnBoarding.route) { inclusive = true }
                     }
                 }
-
-                MainNavigation(mainNavController)
-
             }
+
+            MainNavigation(mainNavController)
+        }
+
+        // Set onBoardingCompleted to false if it's the first launch
+        val sharedPreferences = getSharedPreferences("MySharedPreferences", Context.MODE_PRIVATE)
+        if (!sharedPreferences.contains("firstLaunch")) {
+            sharedPreferences.edit().putBoolean("onBoardingCompleted", false).apply()
+            sharedPreferences.edit().putBoolean("firstLaunch", true).apply()
         }
     }
 }
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainNavigation(mainNavController: NavHostController){
     val backStackEntry = mainNavController.currentBackStackEntryAsState()

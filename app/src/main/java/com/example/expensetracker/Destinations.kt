@@ -27,9 +27,3 @@ object Transactions: Destinations{
     override val icon = R.drawable.ic_transactions
     override val title = "Transactions"
 }
-
-object Notification: Destinations{
-    override val route = "Notification"
-    override val icon = R.drawable.ic_notifications
-    override val title = "Notification"
-}

@@ -20,8 +20,10 @@ object TransactionCategories {
     const val SPORTS = "Sports"
     const val ELECTRONICS = "Electronics"
     const val OTHERS = "Others"
+    const val ALL = "Unknown"
 
     val categories = listOf(
+        Category(ALL,R.drawable.ic_question),
         Category(FOOD, R.drawable.ic_food),
         Category(BEVERAGES, R.drawable.ic_beverages),
         Category(RESTAURANTS, R.drawable.ic_restaurant),

@@ -1,15 +1,14 @@
 package com.example.expensetracker.di
 
 import android.content.ContentResolver
-import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.room.Room
 import com.example.expensetracker.data.daos.TransactionDao
 import com.example.expensetracker.data.database.ExpenseTrackerDatabase
-import com.example.expensetracker.data.repo.TransactionRepository
-import com.example.expensetracker.data.repo.TransactionRepositoryImpl
 import com.example.expensetracker.messageReader.TransactionSMSReader
+import com.example.expensetracker.repository.TransactionRepository
+import com.example.expensetracker.repository.TransactionRepositoryImpl
 import com.example.expensetracker.util.SMSBoundResource
 import com.example.expensetracker.viewModels.TransactionViewModel
 import org.koin.android.ext.koin.androidApplication

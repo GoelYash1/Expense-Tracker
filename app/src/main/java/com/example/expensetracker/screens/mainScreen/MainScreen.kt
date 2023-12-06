@@ -19,15 +19,16 @@ import com.example.expensetracker.screens.mainScreen.transactionScreen.Transacti
 import com.example.expensetracker.viewModels.TransactionViewModel
 import org.koin.androidx.compose.getViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainScreen() {
-    val homeNavController = rememberNavController()
+    val mainNavController = rememberNavController()
     Scaffold(
         topBar = {
-
+             MainTopBar(mainNavController)
         },
         bottomBar = {
-            MainBottomNavigation(homeNavController)
+            MainBottomNavigation(mainNavController)
         }
     ) {
         Box(
@@ -35,7 +36,7 @@ fun MainScreen() {
                 .fillMaxSize()
                 .padding(it)
         ) {
-            HomeNavigation(homeNavController)
+            HomeNavigation(mainNavController)
         }
     }
 
