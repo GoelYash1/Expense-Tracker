@@ -14,6 +14,7 @@ import com.example.expensetracker.util.Resource
 import com.example.expensetracker.util.SMSBoundResource
 import com.example.expensetracker.util.TransactionSMSFilter
 import kotlinx.coroutines.flow.Flow
+import java.util.Locale
 
 class TransactionRepositoryImpl(
     private val transactionDao: TransactionDao,
@@ -35,7 +36,12 @@ class TransactionRepositoryImpl(
                 smsMessageList.forEach {
                     val amount = smsFilter.getAmountSpent(it.body) ?: 0.0
                     val type = if (smsFilter.isExpense(it.body)) "Expense" else "Income"
-                    val accountId = smsFilter.extractAccount(it.body) ?: "N/A"
+                    val accountId = smsFilter.extractAccount(it.body)?.lowercase()
+                        ?.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(
+                                Locale.getDefault()
+                            ) else it.toString()
+                        } ?: "N/A"
                     var account: Account? = null
                     if(accountId!="N/A"){
                         account = accountId.let { it1 -> accountDao.getAccount(it1) }
@@ -73,20 +79,21 @@ class TransactionRepositoryImpl(
     }
 
 
-    override suspend fun updateTransactionsOfId(accountId: String, categoryName: String?, otherPartyName: String?) {
-        try{
+    override suspend fun updateTransactionsOfId(accountId: String, categoryName: String, otherPartyName: String) {
+        try {
             val transactionsToUpdate = transactionDao.getTransactionsByAccountId(accountId)
-            transactionsToUpdate.forEach { transaction ->
-                transaction.categoryName = categoryName
-                if (otherPartyName != null) {
-                    transaction.otherPartyName = otherPartyName
-                }
+            val updatedTransactions = transactionsToUpdate.map { transaction ->
+                transaction.copy(
+                    categoryName = categoryName,
+                    otherPartyName = otherPartyName
+                )
             }
-            transactionDao.updateTransactionsOfId(transactionsToUpdate)
-        } catch (e:SQLiteConstraintException){
-            //
+            transactionDao.updateTransactionsOfId(updatedTransactions)
+        } catch (e: SQLiteConstraintException) {
+            // Handle the exception (e.g., log the error, show a message)
         }
     }
+
 
 
     override fun getCategoryTransactions(category: String): Resource<List<Transaction>> {

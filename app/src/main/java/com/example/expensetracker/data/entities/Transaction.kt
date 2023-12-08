@@ -9,10 +9,10 @@ data class Transaction(
     @PrimaryKey
     val timestamp: Long,
     val title: String,
-    var otherPartyName: String,
+    val otherPartyName: String,
     val amount: Double,
     val type: String,
-    var categoryName: String?,
+    val categoryName: String,
     val accountId: String?
 )
 

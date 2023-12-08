@@ -10,7 +10,7 @@ interface TransactionRepository{
     fun getCategoryTransactions(category: String): Resource<List<Transaction>>
     suspend fun updateTransactionsOfId(
         accountId: String,
-        categoryName: String?,
-        otherPartyName: String?
+        categoryName: String,
+        otherPartyName: String
     )
 }

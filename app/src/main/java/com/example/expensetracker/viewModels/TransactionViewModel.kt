@@ -50,6 +50,12 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
         }
     }
 
+    fun updateTransaction(transaction: Transaction) {
+        viewModelScope.launch {
+            transactionRepository.updateTransaction(transaction)
+        }
+    }
+
 
     private fun getDateTime(year: Int, month: Month?, dayOfMonth: Int?): Pair<LocalDateTime, LocalDateTime> {
         val startDateTime = when {
