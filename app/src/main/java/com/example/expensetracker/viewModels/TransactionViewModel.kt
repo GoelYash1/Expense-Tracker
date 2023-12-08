@@ -23,14 +23,11 @@ import kotlin.coroutines.cancellation.CancellationException
 class TransactionViewModel(private val transactionRepository: TransactionRepository) : ViewModel() {
     private val _transactions = MutableStateFlow<Resource<List<Transaction>>>(Resource.Loading(emptyList()))
     val transactions: StateFlow<Resource<List<Transaction>>> = _transactions
-
     init {
-        Log.d("TransactionViewModel", "Called INIT")
         getTransactions(month = LocalDate.now().month)
     }
 
     fun getTransactions(year: Int = Year.now().value, month: Month?=null, dayOfMonth: Int? = null) {
-        Log.d("TransactionViewModel", "Get Transactions")
         val (startDateTime, endDateTime) = getDateTime(year, month, dayOfMonth)
         val from = startDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val to = endDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -38,7 +35,6 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
         viewModelScope.launch {
             _transactions.value = Resource.Loading(emptyList())
             try {
-                Log.d("TransactionViewModel","In Try Getting Transactions")
                 transactionRepository.getAllTransactions(from, to).collect { result ->
                     _transactions.value = when (result) {
                         is Resource.Success -> Resource.Success(result.data ?: emptyList())
@@ -46,10 +42,9 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
                         is Resource.Loading -> Resource.Loading(emptyList())
                     }
                 }
-            } catch (e: CancellationException) {
-                Log.d("TransactionViewModel", "Coroutine was cancelled")
+            } catch (_: CancellationException) {
+                //
             } catch (e: Exception) {
-                Log.e("TransactionViewModel", "Error fetching transactions", e)
                 _transactions.value = Resource.Error(e, emptyList())
             }
         }
@@ -62,8 +57,10 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
             month != null -> LocalDateTime.of(year, month, 1, 0, 0, 0)
             else -> LocalDateTime.of(year, 1, 1, 0, 0, 0)
         }
-        Log.d("In Get Date TIme","In get date Time")
-        val lastDayOfMonth = month?.length(Year.isLeap(year.toLong())) ?: 31
+        val lastDayOfMonth = when{
+            dayOfMonth!=null->dayOfMonth
+            else->month?.length(Year.isLeap(year.toLong())) ?: 31
+        }
         val endDateTime = LocalDateTime.of(year, month ?: Month.DECEMBER, lastDayOfMonth, 23, 59, 59)
 
         return Pair(startDateTime, endDateTime)

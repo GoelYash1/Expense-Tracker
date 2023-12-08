@@ -8,4 +8,9 @@ interface TransactionRepository{
     suspend fun getAllTransactions(from:Long,to:Long): Flow<Resource<List<Transaction>>>
     suspend fun updateTransaction(transaction: Transaction)
     fun getCategoryTransactions(category: String): Resource<List<Transaction>>
+    suspend fun updateTransactionsOfId(
+        accountId: String,
+        categoryName: String?,
+        otherPartyName: String?
+    )
 }

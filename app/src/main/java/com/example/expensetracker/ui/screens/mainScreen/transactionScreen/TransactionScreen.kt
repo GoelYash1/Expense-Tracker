@@ -1,11 +1,10 @@
 package com.example.expensetracker.ui.screens.mainScreen.transactionScreen
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,13 +18,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,10 +48,10 @@ import java.time.format.DateTimeFormatter
 fun TransactionScreen(transactionViewModel: TransactionViewModel) {
     val transactionResource by transactionViewModel.transactions.collectAsState()
     val months = listOf("ALL") + Month.entries.map { it.name }
-    var currMonth by remember {
+    var currMonth by rememberSaveable {
         mutableStateOf(LocalDate.now().month.name)
     }
-    Log.d("Month name",LocalDate.now().month.name)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -163,20 +161,19 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
                                         fontSize = 12.sp
                                     )
                                 }
-                                Surface(
+                                Box(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 8.dp),
-                                    border = BorderStroke(0.2.dp, Color.Black)
+                                        .padding(horizontal = 8.dp)
+                                        .border(1.dp, Color.Black)
                                 ) {
-                                    TransactionItemUI(transaction = transaction)
+                                    TransactionItemUI(transaction = transaction, transactionViewModel = transactionViewModel,date = date)
                                 }
+
                                 Spacer(modifier = Modifier.padding(6.dp))
                             }
                         }
                     }
                 }
-
             }
         }
     }

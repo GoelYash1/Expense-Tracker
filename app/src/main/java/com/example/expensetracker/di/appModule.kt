@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.room.Room
+import com.example.expensetracker.data.daos.AccountDao
 import com.example.expensetracker.data.daos.TransactionDao
 import com.example.expensetracker.data.database.ExpenseTrackerDatabase
 import com.example.expensetracker.messageReader.TransactionSMSReader
@@ -34,8 +35,11 @@ val appModule = module{
     single<TransactionDao> {
         get<ExpenseTrackerDatabase>().transactionDao()
     }
+    single<AccountDao> {
+        get<ExpenseTrackerDatabase>().accountDao()
+    }
     single<TransactionRepository> {
-        TransactionRepositoryImpl(get(),get(),get())
+        TransactionRepositoryImpl(get(),get(),get(),get())
     }
     viewModel {
         TransactionViewModel(get())

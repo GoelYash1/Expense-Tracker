@@ -8,6 +8,7 @@ data class Category(
 )
 object TransactionCategories {
     const val FOOD = "Food"
+    const val PARTY = "Party"
     const val BEVERAGES = "Beverages"
     const val RESTAURANTS = "Restaurant"
     const val TRAVEL = "Travel"
@@ -20,10 +21,11 @@ object TransactionCategories {
     const val SPORTS = "Sports"
     const val ELECTRONICS = "Electronics"
     const val OTHERS = "Others"
-    const val ALL = "Unknown"
+    const val UNKNOWN = "Unknown"
 
     val categories = listOf(
-        Category(ALL,R.drawable.ic_question),
+        Category(UNKNOWN,R.drawable.ic_unknown),
+        Category(PARTY,R.drawable.ic_party),
         Category(FOOD, R.drawable.ic_food),
         Category(BEVERAGES, R.drawable.ic_beverages),
         Category(RESTAURANTS, R.drawable.ic_restaurant),

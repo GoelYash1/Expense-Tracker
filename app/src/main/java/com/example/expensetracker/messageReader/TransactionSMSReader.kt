@@ -42,8 +42,8 @@ class TransactionSMSReader(private val contentResolver: ContentResolver) {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun getFormattedDate(time: Long): String {
-        val localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault())
+    private fun getFormattedDate(timeStamp: Long): String {
+        val localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(timeStamp), ZoneId.systemDefault())
         return localDateTime.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault()))
     }
 

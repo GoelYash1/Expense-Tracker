@@ -1,9 +1,12 @@
 package com.example.expensetracker.repository
 
+import android.database.sqlite.SQLiteConstraintException
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.expensetracker.data.daos.AccountDao
 import com.example.expensetracker.data.daos.TransactionDao
+import com.example.expensetracker.data.entities.Account
 import com.example.expensetracker.data.entities.Transaction
 import com.example.expensetracker.data.entities.TransactionCategories
 import com.example.expensetracker.messageReader.TransactionSMSReader
@@ -14,26 +17,33 @@ import kotlinx.coroutines.flow.Flow
 
 class TransactionRepositoryImpl(
     private val transactionDao: TransactionDao,
+    private val accountDao: AccountDao,
     private val transactionSMSReader: TransactionSMSReader,
     private val smsBoundResource: SMSBoundResource
 ) : TransactionRepository {
+    private val smsFilter = TransactionSMSFilter()
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun getAllTransactions(from: Long, to: Long): Flow<Resource<List<Transaction>>> {
-        Log.d("Get All Transactions Called","")
         return smsBoundResource.bind(
             query = {
                 transactionDao.getTransactions(from, to)
             },
             fetch = {
+                Log.e("TransactionRepositoryImpl","In Fetch")
                 val transactions = mutableListOf<Transaction>()
                 val smsMessageList = transactionSMSReader.getTransactionSMS(from, to).values.flatten()
                 smsMessageList.forEach {
-                    val amount = TransactionSMSFilter().getAmountSpent(it.body) ?: 0.0
-                    val type = if (TransactionSMSFilter().isExpense(it.body)) "Expense" else "Income"
-                    val otherPartyName = TransactionSMSFilter().extractAccount(it.body) ?: "N/A"
+                    val amount = smsFilter.getAmountSpent(it.body) ?: 0.0
+                    val type = if (smsFilter.isExpense(it.body)) "Expense" else "Income"
+                    val accountId = smsFilter.extractAccount(it.body) ?: "N/A"
+                    var account: Account? = null
+                    if(accountId!="N/A"){
+                        account = accountId.let { it1 -> accountDao.getAccount(it1) }
+                    }
+                    val categoryName = account?.defaultCategory ?:TransactionCategories.UNKNOWN
+                    val otherPartyName = account?.accountName ?: accountId
                     val title = "What For?"
-                    val categoryName = TransactionCategories.ALL
-                    val accountId = ""
+
                     transactions.add(
                         Transaction(
                             timestamp = it.time,
@@ -46,24 +56,43 @@ class TransactionRepositoryImpl(
                         )
                     )
                 }
-                Log.d("transactions","${transactions.size}")
                 transactions
-            }
-        ) {
+            },
+            saveFetchResult = {
                 transactionDao.insertAllTransactions(it)
-        }
+            }
+        )
     }
 
     override suspend fun updateTransaction(transaction: Transaction) {
-        transactionDao.updateTransaction(transaction)
+        try {
+            transactionDao.updateTransaction(transaction)
+        } catch (e: SQLiteConstraintException) {
+            // Handle the exception (e.g., log the error, show a message)
+        }
     }
+
+
+    override suspend fun updateTransactionsOfId(accountId: String, categoryName: String?, otherPartyName: String?) {
+        try{
+            val transactionsToUpdate = transactionDao.getTransactionsByAccountId(accountId)
+            transactionsToUpdate.forEach { transaction ->
+                transaction.categoryName = categoryName
+                if (otherPartyName != null) {
+                    transaction.otherPartyName = otherPartyName
+                }
+            }
+            transactionDao.updateTransactionsOfId(transactionsToUpdate)
+        } catch (e:SQLiteConstraintException){
+            //
+        }
+    }
+
 
     override fun getCategoryTransactions(category: String): Resource<List<Transaction>> {
         return try {
-            Resource.Success(transactionDao.getCategoryTransactions(category))
+            Resource.Success(transactionDao.getTransactionsByCategory(category))
         } catch (e: Exception) {
-            // Log the exception for debugging
-            Log.e("TransactionRepositoryImpl", "Error getting category transactions", e)
             Resource.Error(e, emptyList())
         }
     }
