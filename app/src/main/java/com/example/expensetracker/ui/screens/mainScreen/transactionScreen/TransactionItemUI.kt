@@ -30,11 +30,14 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
@@ -44,6 +47,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.graphics.toColor
+import com.example.expensetracker.R
 import com.example.expensetracker.data.entities.Transaction
 import com.example.expensetracker.data.entities.TransactionCategories
 import com.example.expensetracker.viewModels.TransactionViewModel
@@ -77,9 +82,15 @@ fun TransactionItemUI(
         mutableStateOf(false)
     }
     var categoryIcon by remember{
-        mutableStateOf( transactionCategories.find {
+        mutableIntStateOf( transactionCategories.find {
             currCategory == it.name
         }?.iconResId!!)
+    }
+    var rotationAngle by remember {
+        mutableFloatStateOf(0f)
+    }
+    var transactionColor by remember {
+        mutableStateOf(Color.Green.copy(green = 0.7f))
     }
     Row(
         modifier = Modifier
@@ -88,6 +99,7 @@ fun TransactionItemUI(
             .clickable { showDialog = true },
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // First Column
         val category =
             TransactionCategories.categories.find { it.name == transaction.categoryName }
         category?.let {
@@ -98,6 +110,7 @@ fun TransactionItemUI(
                 modifier = Modifier.size(24.dp)
             )
         }
+        // Second Column
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -118,6 +131,8 @@ fun TransactionItemUI(
                 overflow = TextOverflow.Ellipsis
             )
         }
+
+        // Third Column
         Column {
             Text(
                 text = transaction.amount.toString(),
@@ -133,8 +148,22 @@ fun TransactionItemUI(
                 fontWeight = FontWeight.Light,
                 fontSize = 12.sp
             )
-
         }
+
+        // Fourth Column
+        if (transaction.type == "Income"){
+            transactionColor = Color.Red
+            rotationAngle = 180f
+        }
+        Icon(
+            painter = painterResource(id = R.drawable.ic_expense),
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+                .rotate(rotationAngle),
+            tint = transactionColor
+        )
+
 
         if (showDialog) {
 
