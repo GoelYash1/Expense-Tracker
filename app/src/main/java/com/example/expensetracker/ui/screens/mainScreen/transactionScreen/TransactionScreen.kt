@@ -56,80 +56,72 @@ import java.util.Locale
 fun TransactionScreen(transactionViewModel: TransactionViewModel) {
     val transactionResource by transactionViewModel.transactions.collectAsState()
     val months = Month.entries.map { item ->
-        item.name.lowercase()
-        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() } }.reversed()
-    var selectedMonth by rememberSaveable {
-        mutableStateOf(LocalDate.now().month.name)
-    }
-    var selectedYear by rememberSaveable {
-        mutableIntStateOf(Year.now().value)
-    }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
+        item
+            .name
+            .lowercase()
+            .replaceFirstChar{
+                if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+            }
+    }.reversed()
+
+    var selectedTime by rememberSaveable { mutableStateOf(LocalDate.now().month.name to Year.now().value) }
+    var selectedYear by rememberSaveable { mutableIntStateOf(Year.now().value) }
+
+    Column(modifier = Modifier.fillMaxSize()) {
         Row(
-            Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null, modifier = Modifier.size(32.dp).clickable { selectedYear-=1 })
+            Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null, modifier = Modifier.size(32.dp).clickable { selectedYear-- })
             Text(text = selectedYear.toString(), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
-            Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(32.dp).clickable { if (selectedYear < Year.now().value) selectedYear+=1 })
+            Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(32.dp).clickable { if (selectedYear < Year.now().value) selectedYear++ })
         }
-        LazyRow{
-            items(months){
+
+        LazyRow {
+            items(months) { month ->
+                val isSelected = selectedTime.first == month.uppercase() && selectedTime.second == selectedYear
                 Box(
                     modifier = Modifier
-                        .border(1.dp,Color.Black, RoundedCornerShape(5.dp))
+                        .border(1.dp, Color.Black, RoundedCornerShape(5.dp))
                         .clickable {
-                            selectedMonth = it.uppercase()
-                            val month = Month.valueOf(selectedMonth)
-                            transactionViewModel.getTransactions(
-                                year = selectedYear,
-                                month = month
-                            )
+                            selectedTime = month.uppercase() to selectedYear
+                            transactionViewModel.getTransactions(year = selectedYear, month = Month.valueOf(month.uppercase()))
                         }
-                        .background(if (selectedMonth == it.uppercase()) MaterialTheme.colorScheme.inversePrimary else Color.White)
+                        .background(if (isSelected) MaterialTheme.colorScheme.inversePrimary else Color.White)
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = it,
-                            modifier = Modifier.padding(16.dp),
-                            fontSize = 16.sp
-                        )
+                        Text(text = month, modifier = Modifier.padding(16.dp), fontSize = 16.sp)
                     }
                 }
             }
         }
+
         Box(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-
-            when (transactionResource) {
+            when (val resource = transactionResource) {
                 is Resource.Error -> {
-                    val error = (transactionResource as Resource.Error).error
+                    val error = resource.error
                     Text(
                         text = "Error occurred: ${error?.message ?: "Unknown error"}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = Color.Red
+                        color = Color.Red,
+                        modifier = Modifier.padding(16.dp)
                     )
                 }
 
                 is Resource.Loading -> {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(modifier = Modifier.padding(16.dp))
                 }
 
                 is Resource.Success -> {
-                    val transactions =
-                        (transactionResource as Resource.Success<List<Transaction>>).data
-
+                    val transactions = resource.data
                     val transactionsByDates = transactions?.groupBy { transaction ->
                         val localDateTime = LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(transaction.timestamp),
@@ -137,9 +129,9 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
                         )
                         localDateTime.toLocalDate()
                     }
+
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         transactionsByDates?.forEach { (date, transactionsForDate) ->
                             stickyHeader {
@@ -155,10 +147,9 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
                             }
                             items(transactionsForDate) { transaction ->
                                 Box(
-                                    modifier = Modifier
-                                        .border(0.2.dp, Color.Black)
+                                    modifier = Modifier.border(0.2.dp, Color.Black)
                                 ) {
-                                    TransactionItemUI(transaction = transaction, transactionViewModel = transactionViewModel,date = date)
+                                    TransactionItemUI(transaction = transaction, transactionViewModel = transactionViewModel, date = date)
                                 }
                             }
                         }
@@ -168,4 +159,6 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
         }
     }
 }
+
+
 

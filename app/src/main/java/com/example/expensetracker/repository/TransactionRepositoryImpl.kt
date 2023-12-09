@@ -30,13 +30,14 @@ class TransactionRepositoryImpl(
                 transactionDao.getTransactions(from, to)
             },
             fetch = {
-                Log.e("TransactionRepositoryImpl","In Fetch")
+                transactionSMSReader.getTransactionSMS(from, to).values.flatten()
+            },
+            saveFetchResult = {smsMessageList->
                 val transactions = mutableListOf<Transaction>()
-                val smsMessageList = transactionSMSReader.getTransactionSMS(from, to).values.flatten()
-                smsMessageList.forEach {
-                    val amount = smsFilter.getAmountSpent(it.body) ?: 0.0
-                    val type = if (smsFilter.isExpense(it.body)) "Expense" else "Income"
-                    val accountId = smsFilter.extractAccount(it.body)?.lowercase()
+                smsMessageList.forEach { message ->
+                    val amount = smsFilter.getAmountSpent(message.body) ?: 0.0
+                    val type = if (smsFilter.isExpense(message.body)) "Expense" else "Income"
+                    val accountId = smsFilter.extractAccount(message.body)?.lowercase()
                         ?.replaceFirstChar {
                             if (it.isLowerCase()) it.titlecase(
                                 Locale.getDefault()
@@ -52,7 +53,7 @@ class TransactionRepositoryImpl(
 
                     transactions.add(
                         Transaction(
-                            timestamp = it.time,
+                            timestamp = message.time,
                             title = title,
                             otherPartyName = otherPartyName,
                             amount = amount,
@@ -62,10 +63,7 @@ class TransactionRepositoryImpl(
                         )
                     )
                 }
-                transactions
-            },
-            saveFetchResult = {
-                transactionDao.insertAllTransactions(it)
+                transactionDao.insertAllTransactions(transactions)
             }
         )
     }

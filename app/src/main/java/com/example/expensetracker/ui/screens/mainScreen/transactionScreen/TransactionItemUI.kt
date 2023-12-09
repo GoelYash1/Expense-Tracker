@@ -5,7 +5,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -27,7 +25,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -47,7 +44,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.graphics.toColor
 import com.example.expensetracker.R
 import com.example.expensetracker.data.entities.Transaction
 import com.example.expensetracker.data.entities.TransactionCategories
@@ -66,32 +62,16 @@ fun TransactionItemUI(
     date: LocalDate
 ) {
     val transactionCategories = TransactionCategories.categories
-    var currCategory by remember {
-        mutableStateOf(transaction.categoryName)
-    }
-    var otherPartyName by remember {
-        mutableStateOf(transaction.otherPartyName)
-    }
-    var currTitle by remember {
-        mutableStateOf(transaction.title)
-    }
-    var showCategories by remember {
-        mutableStateOf(false)
-    }
-    var showDialog by remember {
-        mutableStateOf(false)
-    }
-    var categoryIcon by remember{
-        mutableIntStateOf( transactionCategories.find {
-            currCategory == it.name
-        }?.iconResId!!)
-    }
-    var rotationAngle by remember {
-        mutableFloatStateOf(0f)
-    }
-    var transactionColor by remember {
-        mutableStateOf(Color.Green.copy(green = 0.7f))
-    }
+
+    var currCategory by remember { mutableStateOf(transaction.categoryName) }
+    var otherPartyName by remember { mutableStateOf(transaction.otherPartyName) }
+    var currTitle by remember { mutableStateOf(transaction.title) }
+    var showCategories by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+    var categoryIcon by remember { mutableIntStateOf(transactionCategories.find { currCategory == it.name }?.iconResId ?: 0) }
+    var rotationAngle by remember { mutableFloatStateOf(if (transaction.type == "Income") 180f else 0f) }
+    var transactionColor by remember { mutableStateOf(if (transaction.type == "Income") Color.Green.copy(green = 0.7f) else Color.Red) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -100,8 +80,7 @@ fun TransactionItemUI(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // First Column
-        val category =
-            TransactionCategories.categories.find { it.name == transaction.categoryName }
+        val category = TransactionCategories.categories.find { it.name == transaction.categoryName }
         category?.let {
             Icon(
                 painter = painterResource(id = it.iconResId),
@@ -110,6 +89,7 @@ fun TransactionItemUI(
                 modifier = Modifier.size(24.dp)
             )
         }
+
         // Second Column
         Column(
             modifier = Modifier
@@ -135,7 +115,7 @@ fun TransactionItemUI(
         // Third Column
         Column {
             Text(
-                text = transaction.amount.toString(),
+                text = "₹ ${transaction.amount}",
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 16.sp,
                 color = if (transaction.amount >= 0) Color.Green else Color.Red
@@ -151,10 +131,6 @@ fun TransactionItemUI(
         }
 
         // Fourth Column
-        if (transaction.type == "Income"){
-            transactionColor = Color.Red
-            rotationAngle = 180f
-        }
         Icon(
             painter = painterResource(id = R.drawable.ic_expense),
             contentDescription = null,
@@ -164,9 +140,7 @@ fun TransactionItemUI(
             tint = transactionColor
         )
 
-
         if (showDialog) {
-
             AlertDialog(
                 onDismissRequest = { showDialog = false },
                 properties = DialogProperties(
@@ -309,6 +283,7 @@ fun TransactionItemUI(
                 confirmButton = {
                     Button(
                         onClick = {
+                            // Apply changes
                             val newTransaction = transaction.copy(
                                 timestamp = transaction.timestamp,
                                 title = currTitle,

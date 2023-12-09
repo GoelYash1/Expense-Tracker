@@ -21,6 +21,7 @@ object TransactionCategories {
     const val SPORTS = "Sports"
     const val ELECTRONICS = "Electronics"
     const val OTHERS = "Others"
+    const val LAUNDRY = "Laundry"
     const val UNKNOWN = "Unknown"
 
     val categories = listOf(
@@ -38,6 +39,7 @@ object TransactionCategories {
         Category(MOVIES, R.drawable.ic_movies),
         Category(SPORTS, R.drawable.ic_sports),
         Category(ELECTRONICS, R.drawable.ic_electronic),
+        Category(LAUNDRY,R.drawable.ic_laundry),
         Category(OTHERS, R.drawable.ic_others),
     )
 }
