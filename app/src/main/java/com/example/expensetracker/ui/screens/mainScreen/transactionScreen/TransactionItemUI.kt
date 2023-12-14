@@ -69,8 +69,8 @@ fun TransactionItemUI(
     var showCategories by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
     var categoryIcon by remember { mutableIntStateOf(transactionCategories.find { currCategory == it.name }?.iconResId ?: 0) }
-    var rotationAngle by remember { mutableFloatStateOf(if (transaction.type == "Income") 180f else 0f) }
-    var transactionColor by remember { mutableStateOf(if (transaction.type == "Income") Color.Green.copy(green = 0.7f) else Color.Red) }
+    val rotationAngle by remember { mutableFloatStateOf(if (transaction.type == "Income") 180f else 0f) }
+    val transactionColor by remember { mutableStateOf(if (transaction.type == "Income") Color.Green.copy(green = 0.7f) else Color.Red) }
 
     Row(
         modifier = Modifier

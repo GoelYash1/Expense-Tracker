@@ -28,16 +28,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.expensetracker.R
 import com.example.expensetracker.data.entities.Transaction
 import com.example.expensetracker.util.Resource
 import com.example.expensetracker.viewModels.TransactionViewModel
@@ -49,6 +55,7 @@ import java.time.Year
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -73,9 +80,13 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null, modifier = Modifier.size(32.dp).clickable { selectedYear-- })
+            Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null, modifier = Modifier
+                .size(32.dp)
+                .clickable { selectedYear-- })
             Text(text = selectedYear.toString(), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
-            Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(32.dp).clickable { if (selectedYear < Year.now().value) selectedYear++ })
+            Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = null, modifier = Modifier
+                .size(32.dp)
+                .clickable { if (selectedYear < Year.now().value) selectedYear++ })
         }
 
         LazyRow {
@@ -86,7 +97,10 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
                         .border(1.dp, Color.Black, RoundedCornerShape(5.dp))
                         .clickable {
                             selectedTime = month.uppercase() to selectedYear
-                            transactionViewModel.getTransactions(year = selectedYear, month = Month.valueOf(month.uppercase()))
+                            transactionViewModel.getTransactions(
+                                year = selectedYear,
+                                month = Month.valueOf(month.uppercase())
+                            )
                         }
                         .background(if (isSelected) MaterialTheme.colorScheme.inversePrimary else Color.White)
                 ) {
@@ -134,16 +148,47 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
                         modifier = Modifier.fillMaxSize()
                     ) {
                         transactionsByDates?.forEach { (date, transactionsForDate) ->
+                            val totalExpense = "%.2f".format(
+                                transactionsForDate.sumOf {
+                                    when(it.type){
+                                        "Expense"->-it.amount
+                                        else->it.amount
+                                    }
+                                }
+                            )
+                            val rotationAngle=if (totalExpense.toDouble() >= 0.0) 180f else 0f
+                            val transactionColor =if (totalExpense.toDouble() >= 0.0) Color.Green.copy(green = 0.7f) else Color.Red
                             stickyHeader {
-                                Text(
-                                    text = date.format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
+                                Row(
                                     modifier = Modifier
                                         .background(MaterialTheme.colorScheme.inversePrimary)
                                         .fillMaxWidth()
-                                        .padding(16.dp)
-                                )
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = date.format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp,
+                                    )
+                                    Row {
+                                        Text(
+                                            text = "₹ " + totalExpense.toDouble().absoluteValue.toString(),
+                                            fontSize = 18.sp,
+                                            fontStyle = FontStyle.Italic
+                                        )
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_expense),
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .rotate(rotationAngle),
+                                            tint = transactionColor
+                                        )
+                                    }
+                                }
+
                             }
                             items(transactionsForDate) { transaction ->
                                 Box(
