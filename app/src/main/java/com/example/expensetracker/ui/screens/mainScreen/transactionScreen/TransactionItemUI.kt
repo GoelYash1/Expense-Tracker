@@ -70,7 +70,7 @@ fun TransactionItemUI(
     var showDialog by remember { mutableStateOf(false) }
     var categoryIcon by remember { mutableIntStateOf(transactionCategories.find { currCategory == it.name }?.iconResId ?: 0) }
     val rotationAngle by remember { mutableFloatStateOf(if (transaction.type == "Income") 180f else 0f) }
-    val transactionColor by remember { mutableStateOf(if (transaction.type == "Income") Color.Green.copy(green = 0.7f) else Color.Red) }
+    val transactionColor by remember { mutableStateOf(if (transaction.type == "Income") Color.Green else Color.Red) }
 
     Row(
         modifier = Modifier
@@ -117,8 +117,7 @@ fun TransactionItemUI(
             Text(
                 text = "₹ ${transaction.amount}",
                 fontWeight = FontWeight.ExtraBold,
-                fontSize = 16.sp,
-                color = if (transaction.amount >= 0) Color.Green else Color.Red
+                fontSize = 16.sp
             )
             Text(
                 text = LocalDateTime.ofInstant(
@@ -135,7 +134,7 @@ fun TransactionItemUI(
             painter = painterResource(id = R.drawable.ic_expense),
             contentDescription = null,
             modifier = Modifier
-                .size(24.dp)
+                .size(12.dp)
                 .rotate(rotationAngle),
             tint = transactionColor
         )

@@ -143,7 +143,6 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
                         )
                         localDateTime.toLocalDate()
                     }
-
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -172,7 +171,9 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 18.sp,
                                     )
-                                    Row {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
                                         Text(
                                             text = "₹ " + totalExpense.toDouble().absoluteValue.toString(),
                                             fontSize = 18.sp,
@@ -182,7 +183,7 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
                                             painter = painterResource(id = R.drawable.ic_expense),
                                             contentDescription = null,
                                             modifier = Modifier
-                                                .size(24.dp)
+                                                .size(18.dp)
                                                 .rotate(rotationAngle),
                                             tint = transactionColor
                                         )
