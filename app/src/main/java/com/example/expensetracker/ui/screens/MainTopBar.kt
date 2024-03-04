@@ -1,4 +1,4 @@
-package com.example.expensetracker.ui.screens.mainScreen
+package com.example.expensetracker.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

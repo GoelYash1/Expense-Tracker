@@ -3,6 +3,7 @@ package com.example.expensetracker.viewModels
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetracker.data.entities.Transaction
@@ -11,12 +12,14 @@ import com.example.expensetracker.util.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
 import java.time.ZoneId
 import java.util.Calendar
+import java.util.Locale
 import kotlin.coroutines.cancellation.CancellationException
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -24,10 +27,11 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
     private val _transactions = MutableStateFlow<Resource<List<Transaction>>>(Resource.Loading(emptyList()))
     val transactions: StateFlow<Resource<List<Transaction>>> = _transactions
     init {
-        getTransactions(month = LocalDate.now().month)
+        fetchTransactions(month = LocalDate.now().month)
+        getMonthOnMonthTransactions()
     }
 
-    fun getTransactions(year: Int = Year.now().value, month: Month?=null, dayOfMonth: Int? = null) {
+    fun fetchTransactions(year: Int = Year.now().value, month: Month?=null, dayOfMonth: Int? = null) {
         val (startDateTime, endDateTime) = getDateTime(year, month, dayOfMonth)
         val from = startDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val to = endDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -56,8 +60,34 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
         }
     }
 
+    private fun getMonthOnMonthTransactions(year: Int = Year.now().value) {
+        Log.d("TransactionViewModel","Welcome to get MonthOnMonth Transactions")
+        viewModelScope.launch {
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.YEAR, year)
+            calendar.set(Calendar.MONTH, Calendar.JANUARY)
+            val endCalendar = Calendar.getInstance()
+            endCalendar.set(Calendar.YEAR, year + 1)
+            endCalendar.set(Calendar.MONTH, Calendar.JANUARY)
 
-    private fun getDateTime(year: Int, month: Month?, dayOfMonth: Int?): Pair<LocalDateTime, LocalDateTime> {
+            while (calendar.before(endCalendar)) {
+                val startOfMonth = calendar.clone() as Calendar
+                val endOfMonth = calendar.clone() as Calendar
+                endOfMonth.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+
+                val from = startOfMonth.timeInMillis
+                val to = endOfMonth.timeInMillis
+
+                val month = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(startOfMonth.time)
+                val totalAmount = transactionRepository.getTotalTransactionAmount(from, to)
+                // Use totalAmount or store it in a map or list for further processing
+                calendar.add(Calendar.MONTH, 1)
+            }
+        }
+    }
+
+
+    private fun getDateTime(year: Int, month: Month?=null, dayOfMonth: Int?=null): Pair<LocalDateTime, LocalDateTime> {
         val startDateTime = when {
             month != null && dayOfMonth != null -> LocalDateTime.of(year, month, dayOfMonth, 0, 0, 0)
             month != null -> LocalDateTime.of(year, month, 1, 0, 0, 0)

@@ -18,7 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.expensetracker.ui.screens.mainScreen.MainScreen
+import com.example.expensetracker.ui.screens.MainScreen
 import com.example.expensetracker.ui.screens.onBoardingScreen.OnBoardingScreen
 import com.example.expensetracker.util.Main
 import com.example.expensetracker.util.OnBoarding

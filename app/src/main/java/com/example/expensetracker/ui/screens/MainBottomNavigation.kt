@@ -1,4 +1,4 @@
-package com.example.expensetracker.ui.screens.mainScreen
+package com.example.expensetracker.ui.screens
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme

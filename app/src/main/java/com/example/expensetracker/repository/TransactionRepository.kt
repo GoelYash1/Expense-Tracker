@@ -13,4 +13,6 @@ interface TransactionRepository{
         categoryName: String,
         otherPartyName: String
     )
+
+    suspend fun getTotalTransactionAmount(from: Long,to: Long):Double
 }

@@ -1,4 +1,4 @@
-package com.example.expensetracker.ui.screens.mainScreen.homeScreen
+package com.example.expensetracker.ui.screens.homeScreen
 
 import android.nfc.Tag
 import android.util.Log

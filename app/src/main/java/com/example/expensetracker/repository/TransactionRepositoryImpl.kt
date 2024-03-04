@@ -14,6 +14,7 @@ import com.example.expensetracker.util.Resource
 import com.example.expensetracker.util.SMSBoundResource
 import com.example.expensetracker.util.TransactionSMSFilter
 import kotlinx.coroutines.flow.Flow
+import java.util.Calendar
 import java.util.Locale
 
 class TransactionRepositoryImpl(
@@ -37,17 +38,11 @@ class TransactionRepositoryImpl(
                 smsMessageList.forEach { message ->
                     val amount = smsFilter.getAmountSpent(message.body) ?: 0.0
                     val type = if (smsFilter.isExpense(message.body)) "Expense" else "Income"
-                    val accountId = smsFilter.extractAccount(message.body)?.lowercase()
-                        ?.replaceFirstChar {
-                            if (it.isLowerCase()) it.titlecase(
-                                Locale.getDefault()
-                            ) else it.toString()
-                        } ?: "N/A"
-                    var account: Account? = null
-                    if(accountId!="N/A"){
-                        account = accountId.let { it1 -> accountDao.getAccount(it1) }
-                    }
-                    val categoryName = account?.defaultCategory ?:TransactionCategories.UNKNOWN
+                    val accountId = smsFilter.extractAccount(message.body)?.lowercase()?.replaceFirstChar {
+                        it.titlecase(Locale.getDefault())
+                    } ?: "N/A"
+                    val account = if(accountId!="N/A") accountDao.getAccount(accountId) else null
+                    val categoryName = account?.defaultCategory ?: TransactionCategories.UNKNOWN
                     val otherPartyName = account?.accountName ?: accountId
                     val title = "What For?"
 
@@ -67,6 +62,7 @@ class TransactionRepositoryImpl(
             }
         )
     }
+
 
     override suspend fun updateTransaction(transaction: Transaction) {
         try {
@@ -92,13 +88,15 @@ class TransactionRepositoryImpl(
         }
     }
 
-
-
     override fun getCategoryTransactions(category: String): Resource<List<Transaction>> {
         return try {
             Resource.Success(transactionDao.getTransactionsByCategory(category))
         } catch (e: Exception) {
             Resource.Error(e, emptyList())
         }
+    }
+
+    override suspend fun getTotalTransactionAmount(from: Long, to: Long): Double {
+        return transactionDao.getTotalTransactionAmount(from,to)
     }
 }

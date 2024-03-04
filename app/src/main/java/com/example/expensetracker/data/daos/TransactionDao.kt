@@ -25,4 +25,7 @@ interface TransactionDao {
 
     @Query("SELECT * FROM transactions WHERE categoryName = :accountId ORDER BY timestamp DESC")
     fun getTransactionsByAccountId(accountId: String): List<Transaction>
+
+    @Query("SELECT SUM(CASE WHEN type='expense' THEN -1 * amount ELSE amount END) FROM transactions WHERE timestamp>=:from AND timestamp<=:to")
+    suspend fun getTotalTransactionAmount(from: Long, to: Long): Double
 }

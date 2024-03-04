@@ -1,4 +1,4 @@
-package com.example.expensetracker.ui.screens.mainScreen.transactionScreen
+package com.example.expensetracker.ui.screens.transactionScreen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -67,7 +67,7 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
             .name
             .lowercase()
             .replaceFirstChar{
-                if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                it.titlecase(Locale.getDefault())
             }
     }.reversed()
 
@@ -90,14 +90,16 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
         }
 
         LazyRow {
-            items(months) { month ->
+            items(listOf(selectedTime.first.lowercase().replaceFirstChar {
+                it.titlecase(Locale.getDefault())
+            }) + months) { month ->
                 val isSelected = selectedTime.first == month.uppercase() && selectedTime.second == selectedYear
                 Box(
                     modifier = Modifier
                         .border(1.dp, Color.Black, RoundedCornerShape(5.dp))
                         .clickable {
                             selectedTime = month.uppercase() to selectedYear
-                            transactionViewModel.getTransactions(
+                            transactionViewModel.fetchTransactions(
                                 year = selectedYear,
                                 month = Month.valueOf(month.uppercase())
                             )

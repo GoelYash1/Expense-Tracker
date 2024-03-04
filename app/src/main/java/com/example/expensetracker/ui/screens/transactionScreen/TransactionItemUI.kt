@@ -1,4 +1,4 @@
-package com.example.expensetracker.ui.screens.mainScreen.transactionScreen
+package com.example.expensetracker.ui.screens.transactionScreen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
