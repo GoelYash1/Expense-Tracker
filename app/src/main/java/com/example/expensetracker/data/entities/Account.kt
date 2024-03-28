@@ -9,5 +9,5 @@ data class Account(
     val accountId: String,
     val accountName: String?,
     val defaultCategory: String?,
-    var totalTransaction: Int
+    var totalTransaction: Double
 )

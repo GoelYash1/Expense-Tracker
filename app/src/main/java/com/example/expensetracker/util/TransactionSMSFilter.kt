@@ -8,7 +8,7 @@ class TransactionSMSFilter {
         private const val MISC_PATTERN = "spent|paying|sent"
         private const val CREDIT_PATTERN = "credited"
 
-        private val IGNORED_WORDS = listOf("redeem", "offer", "rewards", "voucher", "win", "congratulations", "getting","congrats","refunded","otp","declined","disabled", "customer")
+        private val IGNORED_WORDS = listOf("redeem", "offer", "rewards", "voucher", "win", "congratulations", "getting","congrats","refunded","otp","declined","disabled", "customer","upcoming")
         private const val ACCOUNT_PATTERN = "[Aa]ccount|/[Cc]|\\b[Cc][Aa][Rr][Dd]\\b"
         private const val ACCOUNT_ID_PATTERN = "(?i)\\bVPA\\s*(\\S+?)\\s*\\(UPI Ref No\\b"
         private const val UPI_PATTERN = "(UPI:\\s*([\\d\\s]+))"
@@ -49,12 +49,12 @@ class TransactionSMSFilter {
             return account
         }
 
-        val toUpiRegex = "(?i)to\\s+(.*?)\\s+UPI".toRegex()
+        val toUpiRegex = "(?i)To\\s+([A-Z]+(?:\\s+[A-Z]+)*)\\s+UPI".toRegex()
         val toUpiMatchResult = toUpiRegex.find(message)
-        val upi = toUpiMatchResult?.groupValues?.getOrNull(1)
 
-        return upi
+        return toUpiMatchResult?.groupValues?.getOrNull(1)?.trim()
     }
+
 
 
     private fun containsIgnoredWords(message: String): Boolean {

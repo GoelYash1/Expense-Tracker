@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
@@ -80,11 +82,11 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null, modifier = Modifier
+            Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null, modifier = Modifier
                 .size(32.dp)
                 .clickable { selectedYear-- })
             Text(text = selectedYear.toString(), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
-            Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = null, modifier = Modifier
+            Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier
                 .size(32.dp)
                 .clickable { if (selectedYear < Year.now().value) selectedYear++ })
         }
