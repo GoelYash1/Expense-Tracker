@@ -8,7 +8,7 @@ class TransactionSMSFilter {
         private const val MISC_PATTERN = "spent|paying|sent"
         private const val CREDIT_PATTERN = "credited"
 
-        private val IGNORED_WORDS = listOf("redeem", "offer", "rewards", "voucher", "win", "congratulations", "getting","congrats","refunded","otp","declined","disabled", "customer","upcoming")
+        private val IGNORED_WORDS = listOf("redeem", "offer", "rewards", "voucher", "win", "congratulations", "getting","congrats","refunded","otp","declined","disabled", "customer","upcoming","approving")
         private const val ACCOUNT_PATTERN = "[Aa]ccount|/[Cc]|\\b[Cc][Aa][Rr][Dd]\\b"
         private const val ACCOUNT_ID_PATTERN = "(?i)\\bVPA\\s*(\\S+?)\\s*\\(UPI Ref No\\b"
         private const val UPI_PATTERN = "(UPI:\\s*([\\d\\s]+))"
@@ -43,16 +43,24 @@ class TransactionSMSFilter {
     fun extractAccount(message: String): String? {
         val accountRegex = ACCOUNT_ID_PATTERN.toRegex()
         val accountMatchResult = accountRegex.find(message)
-        val account = accountMatchResult?.groupValues?.getOrNull(1)
+        var account = accountMatchResult?.groupValues?.getOrNull(1)
 
         if (!account.isNullOrEmpty()) {
             return account
         }
 
-        val toUpiRegex = "(?i)To\\s+([A-Z]+(?:\\s+[A-Z]+)*)\\s+UPI".toRegex()
+        val toUpiRegex = "(?i)To\\s+(.*?)\\s+UPI".toRegex()
         val toUpiMatchResult = toUpiRegex.find(message)
+        account = toUpiMatchResult?.groupValues?.getOrNull(1)?.trim()
 
-        return toUpiMatchResult?.groupValues?.getOrNull(1)?.trim()
+        if (!account.isNullOrEmpty()) {
+            return account
+        }
+
+        val toOnRegex = "(?i)To\\s+(.*?)\\s+On".toRegex()
+        val toOnMatchResult = toOnRegex.find(message)
+        account = toOnMatchResult?.groupValues?.getOrNull(1)?.trim()
+        return account
     }
 
 

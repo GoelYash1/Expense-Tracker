@@ -23,31 +23,24 @@ import java.util.Calendar
 
 @RequiresApi(Build.VERSION_CODES.O)
 class TransactionViewModel(private val transactionRepository: TransactionRepository) : ViewModel() {
-    private val _transactions = MutableStateFlow<Resource<List<Transaction>>>(Resource.Loading(emptyList()))
-    val transactions : StateFlow<Resource<List<Transaction>>> = _transactions
-    private val _yearlyTransactions = MutableStateFlow<List<MonthTransaction>>(emptyList())
-    val yearlyTransactions: StateFlow<List<MonthTransaction>> = _yearlyTransactions
+    private val _yearlyTransactions = MutableStateFlow<Resource<List<MonthTransaction>>>(Resource.Loading(emptyList()))
+    val yearlyTransactions: StateFlow<Resource<List<MonthTransaction>>> = _yearlyTransactions
 
-    init {
-        storeTransactions()
-    }
-
-    private fun storeTransactions(year: Int = Year.now().value,month: Month?=null) {
+    fun fetchTransactions(year: Int = Year.now().value) {
         val (startDateTime, endDateTime) = getDateTime(year)
         val from = startDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val to = endDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        viewModelScope.launch {
-            _transactions.value = Resource.Loading(emptyList())
+        viewModelScope.launch(Dispatchers.IO) {
+            _yearlyTransactions.value = Resource.Loading(emptyList())
             try {
                 transactionRepository.getAllTransactions(
                     from = from,
                     to = to
                 ).collect { result ->
-                    _transactions.value = when (result) {
+                    _yearlyTransactions.value = when (result) {
                         is Resource.Success -> {
-                            val transactionsOfYear = result.data?: emptyList()
-                            populateYearlyTransactions(year,transactionsOfYear)
-                            Resource.Success(result.data ?: emptyList())
+                            val yearlyDate = populateYearlyTransactions(year,result.data?: emptyList())
+                            Resource.Success(yearlyDate)
                         }
                         is Resource.Error -> Resource.Error(result.error ?: Exception("Unknown error"), emptyList())
                         is Resource.Loading -> Resource.Loading(emptyList())
@@ -55,16 +48,15 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
                     Log.d("TransactionViewModel","Inside storeTransactions${result.data}")
                 }
             } catch (e: Exception) {
-                _transactions.value = Resource.Error(e, emptyList())
+                _yearlyTransactions.value = Resource.Error(e, emptyList())
             }
         }
     }
 
-    private fun populateYearlyTransactions(year: Int,localTransactions:List<Transaction>) {
-        _yearlyTransactions.value = emptyList()
+    private fun populateYearlyTransactions(year: Int,localTransactions:List<Transaction>):List<MonthTransaction> {
+        val yearlyData = mutableListOf<MonthTransaction>()
+        val months = Month.entries.toTypedArray()
         viewModelScope.launch(Dispatchers.IO) {
-            val months = Month.entries.toTypedArray()
-            val yearlyData = mutableListOf<MonthTransaction>()
             for (month in months) {
                 val totalAmount = calculateTotalAmountForMonth(year, month)
                 val filteredTransactions = localTransactions.filter {
@@ -83,29 +75,9 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
                     )
                 )
             }
-            _yearlyTransactions.value = yearlyData
         }
+        return yearlyData
     }
-
-    fun fetchTransactions(year: Int = Year.now().value, month: Month? = null, dayOfMonth: Int? = null) {
-        Log.d("TransactionViewModel","${_yearlyTransactions.value[0]}")
-        viewModelScope.launch {
-            try {
-                if(_yearlyTransactions.value.isEmpty() || _yearlyTransactions.value[0].year!=year){
-                    storeTransactions(year)
-                }
-                _transactions.value = Resource.Loading(emptyList())
-                val transactionsForMonth = _yearlyTransactions.value
-                    .find { it.year == year && it.month == month }
-                    ?.transactions ?: emptyList()
-
-                _transactions.value = Resource.Success(transactionsForMonth)
-            } catch (e: Exception) {
-                _transactions.value = Resource.Error(e, emptyList())
-            }
-        }
-    }
-
 
     private suspend fun calculateTotalAmountForMonth(year: Int, month: Month): Double {
         return transactionRepository.getTotalTransactionAmount(

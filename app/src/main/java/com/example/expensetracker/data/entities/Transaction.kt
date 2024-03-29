@@ -13,6 +13,7 @@ data class Transaction(
     val amount: Double,
     val type: String,
     val categoryName: String,
-    val accountId: String?
+    val accountId: String?,
+    val description: String?
 )
 

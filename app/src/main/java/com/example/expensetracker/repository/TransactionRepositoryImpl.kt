@@ -38,6 +38,7 @@ class TransactionRepositoryImpl(
                 smsMessageList.forEach { message ->
                     val amount = smsFilter.getAmountSpent(message.body) ?: 0.0
                     val type = if (smsFilter.isExpense(message.body)) "Expense" else "Income"
+                    val description = message.body
                     val accountId = smsFilter.extractAccount(message.body)?.lowercase()?.replaceFirstChar {
                         it.titlecase(Locale.getDefault())
                     } ?: "N/A"
@@ -54,7 +55,8 @@ class TransactionRepositoryImpl(
                             amount = amount,
                             type = type,
                             categoryName = categoryName,
-                            accountId = accountId
+                            accountId = accountId,
+                            description=description
                         )
                     )
                 }

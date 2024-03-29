@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -63,7 +64,7 @@ import kotlin.math.absoluteValue
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TransactionScreen(transactionViewModel: TransactionViewModel) {
-    val transactionResource by transactionViewModel.transactions.collectAsState()
+    val transactionResource by transactionViewModel.yearlyTransactions.collectAsState()
     val months = Month.entries.map { item ->
         item
             .name
@@ -75,6 +76,9 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
 
     var selectedTime by rememberSaveable { mutableStateOf(LocalDate.now().month.name to Year.now().value) }
     var selectedYear by rememberSaveable { mutableIntStateOf(Year.now().value) }
+    LaunchedEffect(key1 = selectedTime.second) {
+        transactionViewModel.fetchTransactions(selectedTime.second)
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -101,18 +105,34 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
                         .border(1.dp, Color.Black, RoundedCornerShape(5.dp))
                         .clickable {
                             selectedTime = month.uppercase() to selectedYear
-                            transactionViewModel.fetchTransactions(
-                                year = selectedYear,
-                                month = Month.valueOf(month.uppercase())
-                            )
                         }
                         .background(if (isSelected) MaterialTheme.colorScheme.inversePrimary else Color.White)
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        Text(text = month, modifier = Modifier.padding(16.dp), fontSize = 16.sp)
+                        Text(text = month, fontSize = 16.sp)
+                        val transactionAmount = transactionResource.data?.find {
+                            it.month == Month.valueOf(month.uppercase()) && it.year == selectedYear
+                        }?.totalTransactionAmount?:0.00
+                        val totalExpense = "%.2f".format(transactionAmount)
+                        val rotationAngle=if (totalExpense.toDouble() >= 0.0) 180f else 0f
+                        val transactionColor =if (totalExpense.toDouble() >= 0.0) Color.Green.copy(green = 0.7f) else Color.Red
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "₹ ${totalExpense.toDouble().absoluteValue}", fontSize = 12.sp)
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_expense),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .rotate(rotationAngle),
+                                tint = transactionColor
+                            )
+                        }
                     }
                 }
             }
@@ -140,7 +160,8 @@ fun TransactionScreen(transactionViewModel: TransactionViewModel) {
 
                 is Resource.Success -> {
                     val transactions = resource.data
-                    val transactionsByDates = transactions?.groupBy { transaction ->
+                    val transactionsByDates = transactions?.find { it.year == selectedTime.second && it.month == Month.valueOf(selectedTime.first.uppercase()) }?.transactions
+                        ?.groupBy { transaction ->
                         val localDateTime = LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(transaction.timestamp),
                             ZoneId.systemDefault()

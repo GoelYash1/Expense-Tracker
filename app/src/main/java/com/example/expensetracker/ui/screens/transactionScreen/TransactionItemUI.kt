@@ -63,24 +63,41 @@ fun TransactionItemUI(
 ) {
     val transactionCategories = TransactionCategories.categories
 
+    // State variables for dialog and category selection
+    var showDialog by remember { mutableStateOf(false) }
+    var showCategories by remember { mutableStateOf(false) }
+
+    // Extract transaction details for readability
     var currCategory by remember { mutableStateOf(transaction.categoryName) }
     var otherPartyName by remember { mutableStateOf(transaction.otherPartyName) }
     var currTitle by remember { mutableStateOf(transaction.title) }
-    var showCategories by remember { mutableStateOf(false) }
-    var showDialog by remember { mutableStateOf(false) }
-    var categoryIcon by remember { mutableIntStateOf(transactionCategories.find { currCategory == it.name }?.iconResId ?: 0) }
-    val rotationAngle by remember { mutableFloatStateOf(if (transaction.type == "Income") 180f else 0f) }
-    val transactionColor by remember { mutableStateOf(if (transaction.type == "Income") Color.Green else Color.Red) }
 
+    // Other state variables and calculations
+    val categoryIcon = remember {
+        mutableIntStateOf(transactionCategories.find { currCategory == it.name }?.iconResId ?: 0)
+    }
+    val rotationAngle = remember { mutableFloatStateOf(if (transaction.type == "Income") 180f else 0f) }
+    val transactionColor = remember { mutableStateOf(if (transaction.type == "Income") Color.Green else Color.Red) }
+
+    // Click listener for showing dialog
+    val onItemClick: () -> Unit = {
+        otherPartyName = transaction.otherPartyName
+        categoryIcon.intValue = transactionCategories.find { transaction.categoryName == it.name }?.iconResId?:0
+        currCategory = transaction.categoryName
+        currTitle = transaction.title
+        showDialog = true
+    }
+
+    // UI components using Jetpack Compose
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
-            .clickable { showDialog = true },
+            .clickable(onClick = onItemClick),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // First Column
-        val category = TransactionCategories.categories.find { it.name == transaction.categoryName }
+        // First Column: Category Icon
+        val category = transactionCategories.find { it.name == transaction.categoryName }
         category?.let {
             Icon(
                 painter = painterResource(id = it.iconResId),
@@ -90,7 +107,7 @@ fun TransactionItemUI(
             )
         }
 
-        // Second Column
+        // Second Column: Transaction Details
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -112,7 +129,7 @@ fun TransactionItemUI(
             )
         }
 
-        // Third Column
+        // Third Column: Amount and Time
         Column {
             Text(
                 text = "₹ ${transaction.amount}",
@@ -129,22 +146,26 @@ fun TransactionItemUI(
             )
         }
 
-        // Fourth Column
+        // Fourth Column: Transaction Type Icon
         Icon(
             painter = painterResource(id = R.drawable.ic_expense),
             contentDescription = null,
             modifier = Modifier
                 .size(12.dp)
-                .rotate(rotationAngle),
-            tint = transactionColor
+                .rotate(rotationAngle.floatValue),
+            tint = transactionColor.value
         )
 
+        // Dialog for editing transaction details
         if (showDialog) {
             AlertDialog(
-                onDismissRequest = { showDialog = false },
+                onDismissRequest = {
+                    showDialog = false
+                },
                 properties = DialogProperties(
                     dismissOnBackPress = true,
-                    dismissOnClickOutside = true
+                    dismissOnClickOutside = true,
+                    usePlatformDefaultWidth = false,
                 ),
                 title = {
                     Text(
@@ -212,7 +233,7 @@ fun TransactionItemUI(
                         Spacer(modifier = Modifier.padding(10.dp))
                         TextField(
                             value = currTitle,
-                            onValueChange = {currTitle = it},
+                            onValueChange = { currTitle = it },
                             label = {
                                 Text(
                                     text = "For",
@@ -231,7 +252,11 @@ fun TransactionItemUI(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = "Category: ", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(
+                                text = "Category: ",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
                             Spacer(modifier = Modifier.width(5.dp))
                             IconButton(
                                 onClick = {
@@ -243,7 +268,7 @@ fun TransactionItemUI(
                             ) {
                                 Row {
                                     Icon(
-                                        painter = painterResource(id = categoryIcon),
+                                        painter = painterResource(id = categoryIcon.intValue),
                                         contentDescription = ""
                                     )
                                     Spacer(modifier = Modifier.padding(5.dp))
@@ -251,10 +276,10 @@ fun TransactionItemUI(
                                 }
                             }
                         }
-                        if (showCategories){
+                        if (showCategories) {
                             Spacer(modifier = Modifier.height(5.dp))
-                            LazyRow{
-                                items(transactionCategories){category->
+                            LazyRow {
+                                items(transactionCategories) { category ->
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier
@@ -262,7 +287,7 @@ fun TransactionItemUI(
                                             .padding(4.dp)
                                             .clickable {
                                                 currCategory = category.name
-                                                categoryIcon = category.iconResId
+                                                categoryIcon.intValue = category.iconResId
                                                 showCategories = false
                                             }
                                     ) {
@@ -277,6 +302,15 @@ fun TransactionItemUI(
                                 }
                             }
                         }
+                        Spacer(modifier = Modifier.height(5.dp))
+                        Text(text = "Description", textAlign = TextAlign.Center , fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = transaction.description.toString(),
+                            Modifier
+                                .border(2.dp, Color.Black)
+                                .padding(10.dp)
+                        )
                     }
                 },
                 confirmButton = {
@@ -309,8 +343,10 @@ fun TransactionItemUI(
                     ) {
                         Text(text = "Cancel")
                     }
-                }
-            )
+                },
+
+                )
         }
     }
 }
+
