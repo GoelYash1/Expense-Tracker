@@ -13,76 +13,74 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.sql.Time
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
 import java.time.ZoneId
-import java.util.Calendar
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 class TransactionViewModel(private val transactionRepository: TransactionRepository) : ViewModel() {
     private val _yearlyTransactions = MutableStateFlow<Resource<List<MonthTransaction>>>(Resource.Loading(emptyList()))
     val yearlyTransactions: StateFlow<Resource<List<MonthTransaction>>> = _yearlyTransactions
 
+    private var isFetching = false
+
     fun fetchTransactions(year: Int = Year.now().value) {
+        if (isFetching) return // Do not fetch if already fetching
+        isFetching = true
         val (startDateTime, endDateTime) = getDateTime(year)
         val from = startDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val to = endDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         viewModelScope.launch(Dispatchers.IO) {
             _yearlyTransactions.value = Resource.Loading(emptyList())
             try {
-                transactionRepository.getAllTransactions(
-                    from = from,
-                    to = to
-                ).collect { result ->
+                transactionRepository.getAllTransactions(from, to).collect { result ->
                     _yearlyTransactions.value = when (result) {
                         is Resource.Success -> {
-                            val yearlyDate = populateYearlyTransactions(year,result.data?: emptyList())
+                            val yearlyDate = populateYearlyTransactions(year, result.data ?: emptyList())
                             Resource.Success(yearlyDate)
                         }
                         is Resource.Error -> Resource.Error(result.error ?: Exception("Unknown error"), emptyList())
                         is Resource.Loading -> Resource.Loading(emptyList())
                     }
-                    Log.d("TransactionViewModel","Inside storeTransactions${result.data}")
+                    isFetching = false
+                    Log.d("TransactionViewModel", "Inside storeTransactions${result.data}")
                 }
             } catch (e: Exception) {
                 _yearlyTransactions.value = Resource.Error(e, emptyList())
+                isFetching = false
             }
         }
     }
 
-    private fun populateYearlyTransactions(year: Int,localTransactions:List<Transaction>):List<MonthTransaction> {
+    private suspend fun populateYearlyTransactions(year: Int, localTransactions: List<Transaction>): List<MonthTransaction> {
         val yearlyData = mutableListOf<MonthTransaction>()
         val months = Month.entries.toTypedArray()
-        viewModelScope.launch(Dispatchers.IO) {
-            for (month in months) {
-                val totalAmount = calculateTotalAmountForMonth(year, month)
-                val filteredTransactions = localTransactions.filter {
-                    val transactionDateTime = LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(it.timestamp),
-                        ZoneId.systemDefault()
-                    )
-                    transactionDateTime.year == year && transactionDateTime.month == month
-                }
-                yearlyData.add(
-                    MonthTransaction(
-                        month = month,
-                        year = year,
-                        transactions = filteredTransactions,
-                        totalTransactionAmount = totalAmount
-                    )
-                )
+        for (month in months) {
+            val totalAmount = calculateTotalAmountForMonth(year, month)
+            val filteredTransactions = localTransactions.filter {
+                val transactionDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(it.timestamp), ZoneId.systemDefault())
+                transactionDateTime.year == year && transactionDateTime.month == month
             }
+            yearlyData.add(
+                MonthTransaction(
+                    month = month,
+                    year = year,
+                    transactions = filteredTransactions,
+                    totalTransactionAmount = totalAmount
+                )
+            )
         }
         return yearlyData
     }
 
     private suspend fun calculateTotalAmountForMonth(year: Int, month: Month): Double {
+        val (startDateTime, endDateTime) = getDateTime(year, month)
         return transactionRepository.getTotalTransactionAmount(
-            from = getDateTime(year, month).first.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-            to = getDateTime(year, month).second.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            from = startDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            to = endDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         )
     }
 
@@ -91,7 +89,6 @@ class TransactionViewModel(private val transactionRepository: TransactionReposit
             transactionRepository.updateTransaction(transaction)
         }
     }
-
 
     private fun getDateTime(year: Int, month: Month? = null, dayOfMonth: Int? = null): Pair<LocalDateTime, LocalDateTime> {
         val startDateTime = when {

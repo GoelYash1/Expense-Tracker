@@ -8,7 +8,7 @@ class TransactionSMSFilter {
         private const val MISC_PATTERN = "spent|paying|sent"
         private const val CREDIT_PATTERN = "credited"
 
-        private val IGNORED_WORDS = listOf("redeem", "offer", "rewards", "voucher", "win", "congratulations", "getting","congrats","refunded","otp","declined","disabled", "customer","upcoming","approving")
+        private val IGNORED_WORDS = listOf("redeem", "continue","offer", "rewards", "voucher", "win", "congratulations", "getting","congrats","refunded","otp","declined","disabled", "customer","upcoming","approving","will","requested","new","get")
         private const val ACCOUNT_PATTERN = "[Aa]ccount|/[Cc]|\\b[Cc][Aa][Rr][Dd]\\b"
         private const val ACCOUNT_ID_PATTERN = "(?i)\\bVPA\\s*(\\S+?)\\s*\\(UPI Ref No\\b"
         private const val UPI_PATTERN = "(UPI:\\s*([\\d\\s]+))"
