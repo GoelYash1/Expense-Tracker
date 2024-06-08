@@ -1,2 +1,2 @@
-# Expense-Tracker-2.0
-## Trying to use better methods
+# Expense-Tracker
+## SMS based Expense tracker
